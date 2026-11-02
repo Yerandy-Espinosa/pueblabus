@@ -10,7 +10,7 @@
     "dev": "concurrently -k -n api,web \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "node --use-env-proxy --env-file-if-exists=.env --import tsx --watch server/index.ts",
     "dev:web": "vite --host 0.0.0.0",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node --import tsx scripts/write-version.ts",
     "build:netlify": "npm run data:sync -- --optional && npm run build",
     "data:sync": "node --use-env-proxy --import tsx scripts/sync-ctan.ts",
     "start": "node --use-env-proxy --env-file-if-exists=.env --import tsx server/index.ts",

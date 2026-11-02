@@ -4,7 +4,7 @@ import { createDemo } from '../../server/demo';
 test.beforeEach(async ({ page }) => {
   // The cloud policy blocks the tile provider until settings are applied.
   // Exercise the documented offline map fallback deterministically.
-  await page.route('https://a.basemaps.cartocdn.com/**', route => route.abort());
+  await page.route('https://tile.openstreetmap.org/**', route => route.abort());
   await page.goto('/');
   await expect(page.getByText('Demostración · datos de ejemplo')).toBeAttached();
 });
@@ -14,6 +14,11 @@ test('mapa, zoom y movimiento de los cuatro vehículos', async ({ page }, info) 
   page.on('pageerror', e => errors.push(e.message));
   await expect(page.locator('.bus-marker')).toHaveCount(4);
   await expect(page.getByText('Mapa esquemático · no apto para navegar')).toBeVisible();
+  // At overview zoom, five seconds of travel can round to the same screen pixel.
+  // Zoom in and let the map animation settle before testing actual bus movement.
+  await page.getByRole('button', { name: 'Acercar mapa' }).click();
+  await page.getByRole('button', { name: 'Acercar mapa' }).click();
+  await page.waitForTimeout(500);
   const marker = page.locator('.bus-marker').first();
   const before = await marker.getAttribute('style');
   await expect.poll(() => marker.getAttribute('style'), { timeout: 10_000 }).not.toBe(before);

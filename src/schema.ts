@@ -12,6 +12,11 @@ export const routeSchema = z.object({
   durationMinutes: z.number().positive(),
   geometry: z.enum(['shape', 'stops']).optional(),
   operator: z.string().optional(),
+  ctanLineId: z.string().regex(/^\d+$/).optional(),
+  ctanDirection: z.enum(['1', '2']).optional(),
+  serviceLabel: z.string().optional(),
+  operatesOnWeekends: z.boolean().optional(),
+  operatesOnHolidays: z.boolean().optional(),
 });
 const gtfsTime = z.string().regex(/^\d{2,3}:[0-5]\d(?::[0-5]\d)?$/);
 const serviceDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -19,6 +24,11 @@ export const vehicleSchema = z.object({
   id: z.string().min(1), routeId: z.string(), position: point,
   nextStopId: z.string(), arrivalMinutes: z.number().nonnegative(),
   updatedAt: z.iso.datetime(),
+  positionSource: z.enum(['gps', 'estimate', 'demo']).optional(),
+  label: z.string().optional(),
+  journeyId: z.string().optional(),
+  etaAvailable: z.boolean().optional(),
+  nextStopKnown: z.boolean().optional(),
 });
 export const timetableSchema = z.object({
   routeId: z.string(), weekdays: z.array(z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/)),
@@ -33,8 +43,9 @@ export const feedSchema = z.object({
     id: z.string(), routeId: z.string(), serviceId: z.string(), departure: gtfsTime, arrival: gtfsTime,
     stopTimes: z.array(z.object({ stopId: z.string(), time: gtfsTime })).min(2),
   })).optional(),
-  calendar: z.array(z.object({ id: z.string(), start: serviceDay, end: serviceDay, days: z.array(z.boolean()).length(7) })).optional(),
+  calendar: z.array(z.object({ id: z.string(), start: serviceDay, end: serviceDay, days: z.array(z.boolean()).length(7), holidayOperation: z.boolean().optional() })).optional(),
   exceptions: z.array(z.object({ serviceId: z.string(), date: serviceDay, added: z.boolean() })).optional(),
+  holidays: z.array(serviceDay).optional(),
   source: z.object({ url: z.url(), fetchedAt: z.iso.datetime(), name: z.string(), validUntil: serviceDay.optional() }).optional(),
 }).superRefine((feed, ctx) => {
   const stops = new Set(feed.stops.map(s => s.id));

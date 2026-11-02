@@ -30,7 +30,7 @@ export function createDemo(now = new Date()): Feed {
     const route = routes[i < 2 ? 0 : 1];
     const progress = (now.getTime() / 1000 / (70 * 60) + offset) % 1;
     const stopIndex = Math.min(route.stopIds.length - 1, Math.floor(progress * (route.stopIds.length - 1)) + 1);
-    return { id: `PB-${101 + i}`, routeId: route.id, position: pointAlong(route.shape, progress), nextStopId: route.stopIds[stopIndex], arrivalMinutes: Math.max(1, Math.ceil((stopIndex / (route.stopIds.length - 1) - progress) * 70)), updatedAt };
+    return { id: `PB-${101 + i}`, routeId: route.id, position: pointAlong(route.shape, progress), nextStopId: route.stopIds[stopIndex], arrivalMinutes: Math.max(1, Math.ceil((stopIndex / (route.stopIds.length - 1) - progress) * 70)), updatedAt, positionSource: 'demo' as const };
   });
   return {
     updatedAt, stops, routes, vehicles,

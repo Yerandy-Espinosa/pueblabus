@@ -2,11 +2,16 @@ import express from 'express';
 import path from 'node:path';
 import { createTransitSource } from './source.ts';
 import type { Snapshot } from '../src/transit.ts';
+import { departuresResponse } from './departures.ts';
 
 export function createApp(service: { get(): Promise<Snapshot> } = createTransitSource()) {
   const app = express();
   app.disable('x-powered-by');
   app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+  app.get('/api/departures', async (req, res) => {
+    const response = await departuresResponse(new Request(`http://localhost${req.originalUrl}`));
+    res.set('Cache-Control', 'no-store').status(response.status).json(await response.json());
+  });
   app.get('/api/transit', async (_req, res) => {
     const snapshot = await service.get();
     res.set('Cache-Control', 'no-store').status(snapshot.status === 'unavailable' ? 503 : 200).json(snapshot);

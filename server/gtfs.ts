@@ -31,7 +31,8 @@ export function importGtfs(bytes: Uint8Array, now = new Date()): Feed {
   const lines = rows('routes.txt').filter(r => {
     const agency = agencies.get(r.agency_id);
     const seville = /sevilla|ctmas|ctas/.test(normalize(`${r.agency_id} ${agency?.agency_name || ''}`));
-    return seville && normalize(`${r.route_long_name} ${r.route_desc || ''}`).includes('isla mayor');
+    const name = normalize(`${r.route_long_name} ${r.route_desc || ''}`);
+    return seville && (name.includes('isla mayor') || /m-14[01]\b/.test(name) || /^14[01]\d?$/.test(r.route_short_name || ''));
   });
   if (!lines.length) throw new Error('El feed no contiene una línea de Isla Mayor en el consorcio de Sevilla. No se publican datos inventados.');
   const lineMap = new Map(lines.map(r => [r.route_id, r]));
@@ -90,21 +91,29 @@ export function importGtfs(bytes: Uint8Array, now = new Date()): Feed {
         stopIds: schedule.map(s => s.stopId), shape, geometry, durationMinutes: Math.ceil(duration),
         // An agency/consortium is not necessarily the operating company.
         operator: agencies.get(line.agency_id)?.agency_name || '',
+        ...(/^1_\d+$/.test(line.route_id) ? { ctanLineId: line.route_id.slice(2), ctanDirection: stops.get(schedule.at(-1)!.stopId)!.position[0] > stops.get(schedule[0].stopId)!.position[0] ? '1' as const : '2' as const } : {}),
+        ...(/^141\d?$/.test(line.route_short_name || '') || /m-141\b/i.test(line.route_long_name || '') ? { operatesOnWeekends: false, operatesOnHolidays: false } : {}),
       });
     }
     journeys.push({ id: trip.trip_id, routeId, serviceId: trip.service_id, departure, arrival, stopTimes: schedule });
   }
   if (!journeys.length) throw new Error('No hay viajes de Isla Mayor en el GTFS');
   const serviceIds = new Set(journeys.map(j => j.serviceId));
-  const calendar = rows('calendar.txt', false).filter(c => serviceIds.has(c.service_id)).map(c => ({ id: c.service_id, start: isoDate(c.start_date), end: isoDate(c.end_date), days: ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(d => c[d] === '1') }));
+  // CTAN's service identifier ends with idFreq from /1/frecuencias:
+  // 3=Domingos y Festivos, 4=Sábados/Domingos/Festivos, 6=Diario, 13=Festivos.
+  // Its GTFS adds holiday services but does not consistently remove L-V entries.
+  const frequency = (id: string) => /^1_/.test(id) ? id.split('_').at(-1) : undefined;
+  const worksOnHoliday = (id: string) => { const freq = frequency(id); return freq ? ['3', '4', '6', '13'].includes(freq) : undefined; };
+  const calendar = rows('calendar.txt', false).filter(c => serviceIds.has(c.service_id)).map(c => ({ id: c.service_id, start: isoDate(c.start_date), end: isoDate(c.end_date), days: ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(d => c[d] === '1'), holidayOperation: worksOnHoliday(c.service_id) }));
   const exceptions = rows('calendar_dates.txt', false).filter(c => serviceIds.has(c.service_id)).map(c => {
     if (!['1', '2'].includes(c.exception_type)) throw new Error('Excepción GTFS no válida');
     return { serviceId: c.service_id, date: isoDate(c.date), added: c.exception_type === '1' };
   });
   if (!calendar.length && !exceptions.length) throw new Error('No hay calendario de servicio publicado');
+  const holidays = [...new Set(exceptions.filter(e => e.added && ['3', '4', '13'].includes(frequency(e.serviceId) || '')).map(e => e.date))].sort();
   const validUntil = [...calendar.map(c => c.end), ...exceptions.filter(e => e.added).map(e => e.date)].sort().at(-1);
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(now);
   if (!validUntil || validUntil < today) throw new Error('El calendario GTFS ha caducado');
-  return feedSchema.parse({ updatedAt: now.toISOString(), routes, stops: [...stops.values()], vehicles: [], timetables: [], journeys, calendar, exceptions,
+  return feedSchema.parse({ updatedAt: now.toISOString(), routes, stops: [...stops.values()], vehicles: [], timetables: [], journeys, calendar, exceptions, holidays,
     source: { url: CTAN_GTFS_URL, fetchedAt: now.toISOString(), name: 'Red de Consorcios de Transporte de Andalucía · GTFS', validUntil } });
 }

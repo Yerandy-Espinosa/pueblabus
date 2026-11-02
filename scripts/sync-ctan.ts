@@ -1,5 +1,6 @@
 import { mkdir, writeFile, rename } from 'node:fs/promises';
 import { importGtfs, CTAN_GTFS_URL } from '../server/gtfs.ts';
+import { enrichCtanMetadata } from '../server/ctan-metadata.ts';
 
 async function sync() {
   const url = new URL(process.env.CTAN_GTFS_URL || CTAN_GTFS_URL);
@@ -9,7 +10,9 @@ async function sync() {
   if (!response.ok) throw new Error(`No se ha podido descargar el GTFS oficial (HTTP ${response.status})`);
   const bytes = new Uint8Array(await response.arrayBuffer());
   if (bytes.length > 100_000_000) throw new Error('GTFS mayor de 100 MB');
-  const feed = importGtfs(bytes);
+  let feed = importGtfs(bytes);
+  try { feed = await enrichCtanMetadata(feed); }
+  catch { console.warn('No se han actualizado los nombres de municipios y operadores. Se conservan los datos validados del GTFS.'); }
   await mkdir('data', { recursive: true });
   await writeFile('data/ctan.json.tmp', JSON.stringify(feed));
   await rename('data/ctan.json.tmp', 'data/ctan.json');

@@ -8,11 +8,11 @@ const busSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stro
 
 function busIcon(vehicle: Vehicle, color: string, selected: boolean) {
   const wrapper = document.createElement('div');
-  wrapper.className = `bus-pin ${selected ? 'selected' : ''}`;
-  wrapper.style.setProperty('--pin-color', color);
+  wrapper.className = `bus-pin ${selected ? 'selected' : ''} ${vehicle.positionSource === 'estimate' ? 'estimated-pin' : ''}`;
+  wrapper.style.setProperty('--pin-color', vehicle.positionSource === 'estimate' ? '#b18236' : color);
   wrapper.innerHTML = busSvg;
   const label = document.createElement('span');
-  label.textContent = vehicle.id;
+  label.textContent = `${vehicle.positionSource === 'estimate' ? 'EST · ' : ''}${vehicle.label || vehicle.id}`;
   wrapper.append(label);
   return L.divIcon({ html: wrapper, className: 'bus-marker', iconSize: [42, 42], iconAnchor: [21, 21] });
 }
@@ -84,15 +84,15 @@ export default function TransitMap({ feed, routeId, selectedVehicle, selectedSto
   const visibleStopIds = new Set(routes.flatMap(r => r.stopIds));
 
   return <div className="map-wrapper">
-    <MapContainer center={[37.265, -6.09]} zoom={11} zoomControl={false} scrollWheelZoom className="transit-map" aria-label="Mapa de autobuses entre Isla Mayor y Sevilla">
-      <ImageOverlay url="/area-map.svg" bounds={[[37.105, -6.25], [37.43, -5.895]]} />
-      {baseMap && <TileLayer url="https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' eventHandlers={{ tileerror: () => setTileFailed(true), load: () => {} }} />}
+    <MapContainer center={[37.265, -6.09]} zoom={11} zoomControl={false} scrollWheelZoom maxZoom={19} className="transit-map" aria-label="Mapa de autobuses entre Isla Mayor y Sevilla">
+      {(!baseMap || tileFailed) && <ImageOverlay url="/area-map.svg" bounds={[[37.105, -6.25], [37.43, -5.895]]} />}
+      {baseMap && <TileLayer maxZoom={19} url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' eventHandlers={{ tileerror: () => setTileFailed(true), load: () => {} }} />}
       {routes.map(route => <Polyline key={`${route.id}-halo`} positions={route.shape} pathOptions={{ color: '#fff', weight: 9, opacity: .95 }} />)}
       {routes.map((route, i) => <Polyline key={route.id} positions={route.shape.map(p => [p[0], p[1] + (i > 0 && !route.geometry ? .0015 : 0)] as Point)} pathOptions={{ color: route.color, weight: i > 0 ? 3 : 5, opacity: .95, dashArray: route.geometry === 'stops' || i > 0 ? '6 8' : undefined }} />)}
       {showStops && feed.stops.filter(s => visibleStopIds.has(s.id)).map(stop => <CircleMarker key={stop.id} center={stop.position} radius={selectedStop?.id === stop.id ? 9 : 5} pathOptions={{ color: '#21796a', fillColor: '#fff', fillOpacity: 1, weight: 3 }} eventHandlers={{ click: () => onStop(stop) }}>
         <Tooltip permanent={['isla', 'sevilla', 'puebla', 'coria'].includes(stop.id) || selectedStop?.id === stop.id || routes.some(r => r.stopIds[0] === stop.id || r.stopIds.at(-1) === stop.id)} direction={stop.id === 'isla' ? 'right' : 'left'} offset={stop.id === 'isla' ? [10, 0] : [-10, 0]} className="stop-tooltip">{stop.name}</Tooltip>
       </CircleMarker>)}
-      {feed.vehicles.filter(v => routeId === 'all' || v.routeId === routeId).map(v => <Marker key={v.id} position={v.position} title={`Autobús ${v.id}`} alt={`Autobús ${v.id}`} icon={busIcon(v, feed.routes.find(r => r.id === v.routeId)?.color || '#21796a', v.id === selectedVehicle)} eventHandlers={{ click: () => onVehicle(v) }} />)}
+      {feed.vehicles.filter(v => routeId === 'all' || v.routeId === routeId).map(v => <Marker key={v.id} position={v.position} title={`${v.label || v.id}${v.positionSource === 'estimate' ? ' · posición estimada' : v.positionSource === 'demo' ? ' · demostración' : ' · GPS'}`} alt={`${v.label || v.id}${v.positionSource === 'estimate' ? ' · posición estimada' : v.positionSource === 'demo' ? ' · demostración' : ''}`} icon={busIcon(v, feed.routes.find(r => r.id === v.routeId)?.color || '#21796a', v.id === selectedVehicle)} eventHandlers={{ click: () => onVehicle(v) }} />)}
       <MapControls feed={feed} focus={focus} setMessage={setMessage} />
     </MapContainer>
     <div className="map-area-label"><span className="area-dot" /> ALJARAFE Y MARISMAS <span className="area-separator">/</span> SEVILLA</div>
@@ -101,6 +101,6 @@ export default function TransitMap({ feed, routeId, selectedVehicle, selectedSto
       {(tileFailed || !baseMap) && <span className="map-offline">Mapa esquemático · no apto para navegar</span>}
     </div>
     {message && <div className="map-message" role="status"><Crosshair size={16} />{message}<button aria-label="Cerrar aviso de ubicación" onClick={() => setMessage('')}>×</button></div>}
-    {vehicle && <div className="map-selected-label"><span className="status-dot" /> {vehicle.id} seleccionado</div>}
+    {vehicle && <div className="map-selected-label"><span className="status-dot" /> {vehicle.label || vehicle.id}{vehicle.positionSource === 'estimate' ? ' · ESTIMADA' : ' seleccionado'}</div>}
   </div>;
 }

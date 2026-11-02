@@ -1,32 +1,53 @@
-# Investigación de fuentes
+# Fuentes comprobadas
 
-Investigación realizada el 2 de noviembre de 2026. Se distinguen referencias públicas, datos descargados y funcionalidades no confirmadas.
+Verificaciones del 2 de noviembre de 2026.
 
-## Horarios y paradas de Sevilla
+## Posiciones GPS reales
 
-- API del Consorcio: <https://api.ctan.es/doc/>
-- Feed estático identificado: <https://api.ctan.es/v1/datos/UNIFICADO/gtfs.zip>
-- Web del Consorcio de Sevilla: <https://www.ctas.es/>
-- Referencia pública que documenta y utiliza esa URL de GTFS: [sevilla-transit-coverage](https://github.com/javierrc8/sevilla-transit-coverage/blob/main/extract/extract_gtfs.py).
-- Referencia pública de endpoints REST y sus respuestas: [andalusia-public-transport-app](https://github.com/hendrikbgr/andalusia-public-transport-app/blob/main/docs/api.md).
+El mapa oficial [Autobuses en tiempo real](https://www.ctas.es/autobuses-en-tiempo-real) utiliza una consulta GET pública:
 
-La URL del feed se ha encontrado en documentación pública. La consulta directa a CTAN falla aquí con `CONNECT tunnel failed, response 403` del proxy cloud. El registro del primer despliegue de Netlify confirma la descarga del archivo, pero su importación falló por comillas no escapadas en un nombre de parada (`CSV_NON_TRIMABLE_CHAR_AFTER_CLOSING_QUOTE`). Se ha corregido el lector y añadido una prueba de regresión. Aún falta confirmar la importación completa y el número de línea, operador o terminal de Sevilla para este corredor en el siguiente despliegue. El importador descubre las líneas por consorcio y nombre; no fija un supuesto M-xxx ni ALSA como operador sin datos.
+`https://ctas.es/busInfoLinea.php?idlinea=299&sentido=1&accion=infoLinea`
 
-Los endpoints `paradas/.../servicios` documentados por clientes públicos contienen servicios **programados** con una hora y un destino. Sus coordenadas de paradas son ubicaciones de infraestructura. Ninguno de esos campos equivale a una posición GPS del autobús.
+Su script público `posicionamiento.js` describe el formato de `posicion`. La respuesta contiene identificador operativo de autobús, coordenadas como `N371549.630` / `W0060402.180`, fecha y hora con espacios iniciales. Se convierten grados/minutos/segundos y hora de Madrid conservando la fecha de la medición.
 
-Se descartó como fuente actual un archivo público `bus_sevilla.zip` del repositorio [gtfs_bus_sevilla](https://github.com/marcbosch-idencity/gtfs_bus_sevilla): corresponde a TUSSAM y su calendario termina en junio de 2016. No se ha incorporado al producto.
+Se han recibido **mediciones GPS reales de M-140**: en una comprobación a las 14:59, las mediciones tenían aproximadamente 8 y 21 segundos de antigüedad. Se han visto también respuestas válidas con `posicion: []`; no demuestran que no haya servicio, solo que esa consulta no aporta una posición reciente.
 
-## Seguimiento de ALSA
+M-143 no devolvió posiciones durante las consultas realizadas antes de su siguiente servicio festivo. No se presenta como un GPS disponible cuando no lo está. El adaptador se consulta para los sentidos con servicio y activa estimaciones identificadas cuando no hay GPS reciente.
 
-La web de ALSA (<https://www.alsa.es/>) también está bloqueada por el proxy de este entorno. No se ha confirmado un endpoint GPS público y operativo para los autobuses de Isla Mayor.
+No se utilizan claves privadas ni el token sin uso que aparece en el JavaScript público. No se requieren cuentas adicionales para esta integración.
 
-La aplicación pública [Radar ES](https://github.com/FlorinTodor/radar-es#fuentes-de-datos) distingue entre GPS y posiciones estimadas. Su [registro de fuentes](https://github.com/FlorinTodor/radar-es/blob/main/server/adapters/outbound/sources/index.js) utiliza para ALSA el **horario GTFS del NAP** y etiqueta sus posiciones como **estimadas según horario**, mientras que para algunos otros operadores utiliza GTFS-Realtime. Es evidencia secundaria útil, pero no demuestra por sí sola que no exista ninguna otra fuente GPS de ALSA.
+## Horarios y trazados
 
-Por tanto:
+- [API oficial CTAN](https://api.ctan.es/doc/).
+- [GTFS unificado oficial](https://api.ctan.es/v1/datos/UNIFICADO/gtfs.zip).
+- `/v1/Consorcios/1/lineas`: líneas, códigos y operador.
+- `/v1/Consorcios/1/lineas/:id/paradas`: orden y sentido.
+- `/v1/Consorcios/1/paradas`: municipio, núcleo y coordenadas.
+- `/v1/Consorcios/1/paradas/:id/servicios?horaIni=DD-MM-YYYY+HH:MM`: horas programadas, no una ETA GPS.
+- `/v1/Consorcios/1/frecuencias`: tipos de día, incluidos domingos y festivos.
 
-1. Está identificado un camino público para importar horarios y paradas, pendiente de validar mediante descarga directa.
-2. No está confirmada una fuente GPS real para este corredor. No se presenta como integrada.
-3. Que Renfe, algunos operadores de autobús o servicios aeronáuticos publiquen posiciones no establece que ALSA publique las de todas sus líneas.
-4. La versión de Netlify muestra los horarios importados sin inventar autobuses en circulación. La conexión GPS queda pendiente de identificar y verificar su fuente.
+IDs comprobados: M-140=299; M-141=300; M-143 laborable=324; M-143 sábados/domingos/festivos=448. El operador figura como **TRANVIAS DE SEVILLA S.A**. M-140 y M-143 llegan a Delicias; M-141 incluye variantes con Plaza de Armas. Se utilizan los nombres exactos publicados, no un destino supuesto.
 
-No se han copiado credenciales ni se han intentado accesos privados. Para continuar la comprobación oficial hay que aplicar en el entorno los dominios guardados en el borrador de red y volver a ejecutar `npm run data:sync` y las consultas a ALSA/CTAN.
+La importación actual contiene 9 variantes, 89 paradas y 211 viajes, vigentes hasta 2027-06-30. Estos recuentos corresponden a la descarga verificada y pueden cambiar.
+
+## Festivo del 2 de noviembre
+
+El GTFS añade el servicio de festivo para esa fecha, pero no siempre retira la base laborable. `idFreq` se interpreta con la referencia oficial: 1=L-V; 2=sábado; 3=domingos/festivos; 4=sábados/domingos/festivos; 6=diario; 13=festivos. Las fechas de festivo se extraen de las excepciones de esos servicios.
+
+Se ha comprobado:
+
+- M-141 no opera en sábado, domingo ni festivo.
+- M-140 tiene servicio festivo el 2026-11-02.
+- M-143 publica salidas de Isla Mayor 09:50 y 16:50 y de Sevilla 08:45 y 15:45 ese festivo.
+
+La API REST de servicios devolvió también entradas laborables para esa fecha. La aplicación las contrasta con el GTFS festivo y no las muestra como salidas válidas. No se infiere el servicio de un festivo solo por ser lunes.
+
+## Cartografía
+
+Se utilizan [teselas estándar OpenStreetMap](https://www.openstreetmap.org/) con atribución, sin clave. La fuente CARTO anterior mostraba «API KEY REQUIRED» y se ha retirado. El dibujo local es solo un esquema alternativo identificado; no representa calles con precisión y no se usa como prueba de alineación cartográfica.
+
+## Notas históricas
+
+Las primeras consultas desde cloud estaban bloqueadas por la política de red. Después de aplicar los dominios necesarios, se han podido consultar directamente CTAN y CTAS e importar datos reales. No se depende de una estimación ajena como Radar ES para obtener GPS.
+
+El sitio de ALSA redirigió a su cola `alsa.queue-it.net`; no fue necesario atravesarla ni iniciar sesión para integrar la fuente pública del Consorcio. No se ha creado ninguna cuenta AWS ni recurso facturable.
