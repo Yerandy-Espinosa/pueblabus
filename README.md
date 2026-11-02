@@ -1,13 +1,15 @@
 # Pueblabus
 
-Mapa responsive del corredor Isla Mayor–Sevilla con **GPS real prioritario** y **estimaciones de respaldo identificadas**. Incluye M-140, M-141 y M-143, paradas con nombres, próximos servicios, horarios por fecha, favoritos y geolocalización local.
+Mapa responsive del corredor **La Puebla del Río–Sevilla**, con **GPS real prioritario** y **estimaciones de respaldo identificadas**. Incluye M-140, M-141 y el tramo de M-143 que pasa por La Puebla, paradas con nombres, próximos servicios, horarios por fecha, favoritos y geolocalización local.
+
+Autobuses y paradas son **verdes hacia Sevilla** y **rojos de regreso**; el recorrido es **naranja**. Las paradas compartidas muestran ambos colores y cambian al filtrar un sentido. Los horarios de M-143 se muestran desde/hasta La Puebla, usando sus horas de paso publicadas. El feed original se conserva completo para consultar GPS y calcular estimaciones antes de recortar la vista.
 
 ## Fuentes conectadas
 
 1. **GPS del Consorcio de Sevilla:** `https://ctas.es/busInfoLinea.php?idlinea=…&sentido=…&accion=infoLinea`, el endpoint usado por su mapa público. Consulta las líneas con servicio ese día, con caché de 30 segundos. Interpreta coordenadas N/S/E/W en grados/minutos/segundos y la hora de medición en Europe/Madrid. Solo utiliza mediciones de hasta 60 segundos de antigüedad. Se ha comprobado con posiciones reales de M-140.
 2. **Horarios, trazados y paradas:** GTFS público `https://api.ctan.es/v1/datos/UNIFICADO/gtfs.zip`, actualizado durante cada compilación. La última comprobación importó 9 variantes, 89 paradas y 211 viajes, con calendario hasta el 30 de junio de 2027. Los recuentos pueden cambiar al actualizar el feed.
 3. **Metadatos y próximas salidas:** API pública de CTAN, consorcio 1. Confirma operador, municipios y nombres de línea; consulta las próximas salidas de cada parada a través de `/api/departures`.
-4. **Cartografía:** OpenStreetMap con atribución, sin clave para las teselas estándar utilizadas. No hace falta una cuenta AWS ni otra API de mapas para esta configuración. Se respetan las condiciones de uso y atribución del proveedor. El esquema ilustrativo solo aparece como alternativa identificada cuando falta el mapa real.
+4. **Cartografía:** OpenStreetMap con atribución, sin clave para las teselas estándar utilizadas. No hace falta una cuenta AWS ni otra API de mapas para esta configuración. El trazado usa las coordenadas oficiales de CTAN, sin desplazamientos, dentro de la misma proyección de Leaflet que las calles. Si fallan las teselas, se avisa y se permite reintentar; no se sustituye por un dibujo que aparente tener calles reales.
 
 Las fuentes son públicas y esta configuración no necesita credenciales. Ver [fuentes y comprobaciones](docs/SOURCES.md).
 
@@ -54,7 +56,7 @@ npm run build        # TypeScript y cliente, sin descargar datos
 npm run build:netlify # Actualiza datos y compila para Netlify
 ```
 
-Las pruebas de navegador usan `/usr/bin/chromium`, un servidor en modo demo y respuestas controladas para probar GPS, caída y recuperación. Los fixtures son sintéticos; no se despliegan como datos del operador. Las pruebas automáticas fuerzan la indisponibilidad de las teselas para comprobar el esquema alternativo.
+Las pruebas de navegador usan `/usr/bin/chromium`, un servidor en modo demo y respuestas controladas para probar GPS, caída y recuperación. Los fixtures son sintéticos; no se despliegan como datos del operador. Se comprueba el aviso de teselas no disponibles y, por separado, la alineación de ruta y paradas con teselas sintéticas georreferenciadas a zoom 13, 15 y 17, en móvil y ordenador. Esto no sustituye la comprobación visual de las calles reales del proveedor.
 
 ## Netlify
 

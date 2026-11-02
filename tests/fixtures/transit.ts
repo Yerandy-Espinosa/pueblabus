@@ -23,3 +23,15 @@ export function testFeed(): Feed {
 export function testGps(feed: Feed, now = testNow): Vehicle {
   return { id: 'ctas:test-bus', label: 'Test bus', routeId: feed.routes[0].id, position: [37.04, -6], nextStopId: feed.stops[1].id, arrivalMinutes: 0, etaAvailable: false, nextStopKnown: false, positionSource: 'gps', updatedAt: now.toISOString() };
 }
+
+export function corridorTestFeed(): Feed {
+  const feed = testFeed();
+  const island = { ...feed.stops[0], position: [37.13, -6.16] as [number, number] };
+  const puebla = { id: 'ctan:1_3290', name: 'Test Los Juncales', town: 'Puebla Del Rio', position: [37.26, -6.0765] as [number, number], minutesFromStart: 20 };
+  const coria = { ...feed.stops[1], position: [37.285, -6.05] as [number, number] };
+  const seville = { ...feed.stops[2], position: [37.379, -5.994] as [number, number] };
+  const stops = [island, puebla, coria, seville];
+  const shape: Feed['routes'][number]['shape'] = [island.position, [37.24, -6.12], puebla.position, [37.261, -6.073], [37.267, -6.062], coria.position, [37.325, -6.031], [37.355, -6.025], [37.365, -6.015], seville.position];
+  const routes = feed.routes.map((r, i) => ({ ...r, stopIds: (i ? [...stops].reverse() : stops).map(s => s.id), shape: i ? [...shape].reverse() : shape }));
+  return { ...feed, stops, routes, journeys: routes.map((r, i) => ({ ...feed.journeys![i], stopTimes: r.stopIds.map((id, index) => ({ stopId: id, time: (i ? ['10:00:00', '10:30:00', '10:40:00', '11:00:00'] : ['10:00:00', '10:20:00', '10:30:00', '11:00:00'])[index] })) })) };
+}

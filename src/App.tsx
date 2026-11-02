@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDownUp, ArrowLeft, ArrowRight, ArrowUpRight, BusFront, CalendarDays, Check, ChevronDown, ChevronRight, Clock3, Heart, HelpCircle, Info, Map, MapPin, Navigation, Radio, RefreshCw, Search, Sprout, WifiOff, X } from 'lucide-react';
 import TransitMap from './components/TransitMap';
 import NextDepartures from './components/NextDepartures';
 import UpcomingServices from './components/UpcomingServices';
 import { displaySnapshot } from './fallback';
+import { directionFor, DIRECTIONS, ROUTE_COLOR } from './direction';
+import { pueblaCorridor } from './corridor';
 import { addMinutes, departuresFor, displayTime, journeysFor, normalize, serviceDate, type Feed, type Route, type Snapshot, type Stop, type Vehicle } from './transit';
 
 type Tab = 'buses' | 'stops' | 'schedule' | 'favorites';
@@ -58,7 +60,7 @@ function useFavorites() {
 }
 
 function RouteBadge({ route, small = false }: { route?: Route; small?: boolean }) {
-  return <span className={`route-badge ${small ? 'small' : ''}`} style={route ? { color: route.color, background: `${route.color}12` } : undefined}><BusFront size={small ? 12 : 14} />{route?.shortName || 'PB · Demo'}</span>;
+  return <span className={`route-badge ${small ? 'small' : ''}`} style={route ? { color: directionFor(route).color, background: `${directionFor(route).color}12` } : undefined}><BusFront size={small ? 12 : 14} />{route?.shortName || 'PB · Demo'}</span>;
 }
 
 export default function App() {
@@ -74,7 +76,7 @@ export default function App() {
   const [mobileView, setMobileView] = useState<'map' | 'list'>('map');
   const [date, setDate] = useState(serviceDate());
   const helpRef = useRef<HTMLDialogElement>(null);
-  const feed = snapshot?.data;
+  const feed = useMemo(() => snapshot?.data ? pueblaCorridor(snapshot.data) : null, [snapshot?.data]);
   const demo = snapshot?.mode === 'demo';
   const scheduled = snapshot?.mode === 'scheduled';
   const estimated = snapshot?.mode === 'estimated';
@@ -92,7 +94,7 @@ export default function App() {
 
   return <div className="app">
     <header className="site-header">
-      <button className="brand" onClick={() => { changeTab('buses'); setMobileView('map'); }} aria-label="Pueblabus, inicio"><span className="brand-icon"><BusFront size={25} strokeWidth={1.8} /></span><span className="brand-name">puebla<span>bus</span><small>ISLA MAYOR <span>↔</span> SEVILLA</small></span></button>
+      <button className="brand" onClick={() => { changeTab('buses'); setMobileView('map'); }} aria-label="Pueblabus, inicio"><span className="brand-icon"><BusFront size={25} strokeWidth={1.8} /></span><span className="brand-name">puebla<span>bus</span><small>LA PUEBLA <span>↔</span> SEVILLA</small></span></button>
       <nav className="main-nav" aria-label="Navegación principal">
         <button className={tab === 'buses' || tab === 'stops' ? 'active' : ''} onClick={() => { changeTab('buses'); setMobileView('map'); }}><Map size={17} />Mapa</button>
         <button className={tab === 'schedule' ? 'active' : ''} onClick={() => changeTab('schedule')}><Clock3 size={17} />Horarios</button>
@@ -123,7 +125,7 @@ export default function App() {
               <div className="vehicle-list">{displayedVehicles.map(vehicle => {
                 const route = feed.routes.find(r => r.id === vehicle.routeId)!;
                 const next = feed.stops.find(s => s.id === vehicle.nextStopId);
-                return <button key={vehicle.id} className={`vehicle-card ${selectedVehicle === vehicle.id ? 'selected' : ''} ${vehicle.positionSource === 'estimate' ? 'estimated-card' : ''}`} onClick={() => selectVehicle(vehicle)} aria-pressed={selectedVehicle === vehicle.id}>
+                return <button key={vehicle.id} style={{ borderLeftColor: directionFor(route).color, borderLeftWidth: 4 }} className={`vehicle-card ${selectedVehicle === vehicle.id ? 'selected' : ''} ${vehicle.positionSource === 'estimate' ? 'estimated-card' : ''}`} onClick={() => selectVehicle(vehicle)} aria-pressed={selectedVehicle === vehicle.id}>
                   <div className="vehicle-card-top"><RouteBadge route={route} /><span className="vehicle-number">{vehicle.label || vehicle.id}<span className={`position-kind ${vehicle.positionSource === 'estimate' ? 'estimate' : ''}`}>{vehicle.positionSource === 'estimate' ? 'ESTIMADA' : demo ? 'DEMO' : 'GPS'}</span></span></div>
                   <div className="vehicle-destination"><h3>Hacia {route.destination}</h3><ArrowUpRight size={19} /></div>
                   <div className="vehicle-next"><span className="next-stop-line"><i /><span>{vehicle.nextStopKnown === false ? 'Parada cercana' : 'Próxima parada'}<strong>{next?.name || 'Sin parada indicada'}</strong></span></span><span className="arrival">{vehicle.etaAvailable === false ? <><strong className="gps-text">GPS</strong><small>sin ETA publicada</small></> : <><strong>{vehicle.arrivalMinutes}</strong> min<small>{demo ? 'ejemplo' : 'según horario'}</small></>}</span></div>
@@ -147,11 +149,11 @@ export default function App() {
       </aside>
 
       <main className="main-map" aria-label="Mapa del recorrido">
-        <div className="map-heading"><div><div className="map-kicker"><span className="status-dot" /> TU RECORRIDO</div><h2>Isla Mayor <span>↔</span> Sevilla</h2></div><button className={`stops-toggle ${showStops ? 'active' : ''}`} aria-pressed={showStops} onClick={() => setShowStops(v => !v)}><MapPin size={17} /><span>Mostrar paradas</span><span className="toggle-track"><span /></span></button></div>
+        <div className="map-heading"><div><div className="map-kicker"><span className="status-dot" /> TU RECORRIDO · M-140 / M-141 / M-143</div><h2>La Puebla del Río <span>↔</span> Sevilla</h2></div><button className={`stops-toggle ${showStops ? 'active' : ''}`} aria-pressed={showStops} onClick={() => setShowStops(v => !v)}><MapPin size={17} /><span>Mostrar paradas</span><span className="toggle-track"><span /></span></button></div>
         <div className="map-card">
           {feed ? <TransitMap feed={feed} routeId={routeId} selectedVehicle={selectedVehicle} selectedStop={selectedStop} showStops={showStops} onVehicle={selectVehicle} onStop={selectStop} /> : <div className="map-loading"><Map size={45} strokeWidth={1} /><p>{loading ? 'Preparando el mapa…' : 'El mapa estará disponible al recuperar los datos.'}</p></div>}
           <div className={`map-floating-status ${estimated || mixed ? 'estimated-status' : ''}`}><span className={`floating-icon ${demo ? 'demo' : ''}`}><Radio size={19} /></span><span><strong>{!feed ? 'Esperando información' : estimated ? 'Ubicaciones estimadas por horario' : mixed ? 'GPS real y estimaciones identificadas' : scheduled ? 'Horarios y paradas de CTAN' : demo ? 'Explora Pueblabus' : stale ? 'Conexión interrumpida' : 'Tu autobús, en el mapa'}</strong><small>{!feed ? 'Todavía no hay posiciones disponibles' : estimated ? 'Sin GPS reciente · pueden existir retrasos' : mixed ? 'Cada autobús indica su tipo de posición' : scheduled ? 'Posiciones GPS todavía no disponibles' : demo ? 'Autobuses en movimiento · modo demo' : stale ? 'Mostrando la última posición recibida' : 'GPS oficial · consulta cada 30 segundos'}</small></span><span className="floating-tag">{!feed ? 'SIN DATOS' : estimated ? 'ESTIMADA' : mixed ? 'MIXTO' : scheduled ? 'SIN GPS' : demo ? 'DEMO' : stale ? 'SIN SEÑAL' : 'EN DIRECTO'}</span></div>
-          <div className="map-legend">{(feed?.routes.filter((r, i, all) => all.findIndex(other => other.destination === r.destination) === i).slice(0, 2) || []).map(r => <span key={r.id}><i style={{ background: r.color }} />{r.destination}</span>)}</div>
+          <div className="map-legend" aria-label="Colores por sentido">{Object.values(DIRECTIONS).map(direction => <span key={direction.label}><i className="legend-direction" style={{ background: direction.color }} /><b aria-hidden="true">{direction.symbol}</b>{direction.label}</span>)}<span><i style={{ background: ROUTE_COLOR }} />Recorrido</span></div>
         </div>
         <div className="map-footer"><span><Info size={14} />{demo ? 'Posiciones, paradas y horarios de ejemplo. No utilizar para planificar viajes.' : snapshot?.message || 'Conectando con el servicio de transporte.'}</span><button onClick={() => setHelp(true)}>Sobre los datos<ArrowUpRight size={13} /></button></div>
       </main>
@@ -159,6 +161,7 @@ export default function App() {
     <div className="mobile-view-switch" aria-label="Vista de la aplicación"><button className={mobileView === 'map' ? 'active' : ''} onClick={() => setMobileView('map')}><Map size={17} />Mapa</button><button className={mobileView === 'list' ? 'active' : ''} onClick={() => setMobileView('list')}><BusFront size={17} />{tab === 'schedule' ? 'Horarios' : tab === 'favorites' ? 'Mis paradas' : tab === 'stops' ? 'Paradas' : 'Autobuses'}</button></div>
     <dialog ref={helpRef} className="help-dialog" onCancel={() => setHelp(false)} onClose={() => setHelp(false)} onClick={e => { if (e.target === helpRef.current) setHelp(false); }}>
       <div className="dialog-heading"><span className="brand-icon"><BusFront size={24} /></span><button aria-label="Cerrar información" onClick={() => setHelp(false)}><X size={21} /></button></div><span className="eyebrow">VIAJA CON INFORMACIÓN</span><h2>Primero, la claridad.</h2>
+      <p>El mapa y los horarios se centran en el tramo La Puebla del Río–Sevilla. Incluyen la M-143 a su paso por La Puebla; la línea completa continúa hasta Isla Mayor.</p>
       <p>{demo ? 'Estás viendo una demostración de Pueblabus. Los autobuses se mueven para que puedas probar el mapa, pero no representan vehículos reales.' : estimated || mixed ? 'Priorizamos las posiciones GPS recientes. Cuando faltan, calculamos estimaciones sobre el trazado y las horas oficiales. No contemplan retrasos, cancelaciones o desvíos y no confirman que el autobús esté circulando.' : scheduled ? 'Los horarios y las paradas proceden del GTFS público de CTAN. No se muestran posiciones de autobuses porque esta fuente no las incluye.' : 'Pueblabus muestra los datos de la fuente de transporte configurada. Las estimaciones pueden cambiar con el tráfico y la disponibilidad del servicio.'}</p>
       {feed?.source && <div className="help-note"><Info size={20} /><p>Fuente: {feed.source.name}. Importación: {new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeZone: 'Europe/Madrid' }).format(new Date(feed.source.fetchedAt))}. Calendario hasta {feed.source.validUntil || 'fecha no indicada'}.</p></div>}
       {demo && <div className="help-note"><Info size={20} /><p>Los horarios, nombres de paradas, recorridos y destino en Sevilla son ejemplos sin verificar. No los utilices para planificar un viaje.</p></div>}

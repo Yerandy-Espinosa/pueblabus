@@ -3,7 +3,7 @@ import { createDemo } from '../../server/demo';
 
 test.beforeEach(async ({ page }) => {
   // The cloud policy blocks the tile provider until settings are applied.
-  // Exercise the documented offline map fallback deterministically.
+  // Check the explicit failure notice without substituting an inaccurate map.
   await page.route('https://tile.openstreetmap.org/**', route => route.abort());
   await page.goto('/');
   await expect(page.getByText('Demostración · datos de ejemplo')).toBeAttached();
@@ -13,7 +13,7 @@ test('mapa, zoom y movimiento de los cuatro vehículos', async ({ page }, info) 
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
   await expect(page.locator('.bus-marker')).toHaveCount(4);
-  await expect(page.getByText('Mapa esquemático · no apto para navegar')).toBeVisible();
+  await expect(page.getByText('Mapa de calles no disponible · solo se muestra el recorrido')).toBeVisible();
   // At overview zoom, five seconds of travel can round to the same screen pixel.
   // Zoom in and let the map animation settle before testing actual bus movement.
   await page.getByRole('button', { name: 'Acercar mapa' }).click();

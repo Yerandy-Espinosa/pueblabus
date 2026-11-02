@@ -21,6 +21,10 @@ test('prioriza GPS, avisa al pasar a estimación sin conexión y recupera GPS', 
   if (info.project.name === 'mobile') await page.locator('.mobile-view-switch').getByRole('button', { name: 'Autobuses' }).click();
   await expect(page.locator('.position-kind')).toHaveCount(2);
   await expect(page.locator('.position-kind.estimate')).toHaveCount(0);
+  await expect(page.locator('.bus-pin').nth(0)).toHaveCSS('background-color', 'rgb(21, 128, 61)');
+  await expect(page.locator('.bus-pin').nth(1)).toHaveCSS('background-color', 'rgb(220, 38, 38)');
+  await expect(page.getByLabel('Colores por sentido')).toContainText('Hacia Sevilla');
+  await expect(page.getByLabel('Colores por sentido')).toContainText('Desde Sevilla');
   await expect(page.locator('.arrival').first()).toContainText('sin ETA publicada');
 
   online = false;
@@ -30,6 +34,9 @@ test('prioriza GPS, avisa al pasar a estimación sin conexión y recupera GPS', 
   if (info.project.name === 'mobile') await page.locator('.mobile-view-switch').getByRole('button', { name: 'Mapa', exact: true }).click();
   await expect(page.locator('.floating-tag')).toHaveText('ESTIMADA');
   await expect(page.locator('.estimated-pin')).toHaveCount(2);
+  await expect(page.locator('.estimated-pin').nth(0)).toHaveCSS('background-color', 'rgb(21, 128, 61)');
+  await expect(page.locator('.estimated-pin').nth(1)).toHaveCSS('background-color', 'rgb(220, 38, 38)');
+  await expect(page.locator('.estimated-pin').first()).toHaveCSS('border-top-style', 'dashed');
   const before = await page.locator('.bus-marker').first().getAttribute('style');
   await page.clock.runFor(31_000);
   await expect.poll(() => page.locator('.bus-marker').first().getAttribute('style')).not.toBe(before);

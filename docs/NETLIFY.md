@@ -15,7 +15,7 @@ Después del despliegue:
 
 1. `/api/health` debe indicar `ok`.
 2. `/api/transit` debe devolver `live`, `mixed` o `estimated` según la disponibilidad de GPS. Cada vehículo declara `positionSource`; un marcador estimado siempre se identifica.
-3. `/api/departures?stopId=ctan:1_2648` debe mostrar las próximas salidas programadas desde la parada de Isla Mayor. En festivos se contrasta el calendario para excluir variantes laborables.
+3. `/api/departures?stopId=ctan:1_3290` debe mostrar las próximas salidas programadas desde Polígono Los Juncales, en La Puebla. En festivos se contrasta el calendario para excluir variantes laborables.
 4. Comprueba zoom y desplazamiento sobre calles reales, nombres de paradas y la selección de fechas en móvil y desktop.
 
 No arranques Express en Netlify. `/api/*` se redirige a la función antes de la regla de SPA.

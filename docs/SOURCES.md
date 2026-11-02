@@ -44,7 +44,11 @@ La API REST de servicios devolvió también entradas laborables para esa fecha. 
 
 ## Cartografía
 
-Se utilizan [teselas estándar OpenStreetMap](https://www.openstreetmap.org/) con atribución, sin clave. La fuente CARTO anterior mostraba «API KEY REQUIRED» y se ha retirado. El dibujo local es solo un esquema alternativo identificado; no representa calles con precisión y no se usa como prueba de alineación cartográfica.
+Se utilizan [teselas estándar OpenStreetMap](https://www.openstreetmap.org/) con atribución, sin clave. La fuente CARTO anterior mostraba «API KEY REQUIRED» y se ha retirado. También se retira el dibujo local: sus calles ilustrativas no coincidían con la geometría oficial. Cuando falla el mapa base, solo queda el recorrido con un aviso explícito y un botón para reintentar.
+
+La vista se limita a La Puebla del Río–Sevilla. La M-143 se recorta en la parada oficial Polígono Los Juncales (`1_3290`), conservando todos los puntos intermedios del trazado oficial y sus horas de paso por La Puebla. El feed completo sigue utilizándose para interpretar GPS y estimaciones. No se desplazan coordenadas para separar sentidos. Ruta y calles comparten la proyección de Leaflet; el zoom vuelve a proyectar la geometría, con simplificación desactivada.
+
+Verde identifica autobuses y paradas hacia Sevilla; rojo identifica los de regreso. Una parada compartida muestra medio anillo de cada color. El recorrido es naranja.
 
 ## Notas históricas
 
