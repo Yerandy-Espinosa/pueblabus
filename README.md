@@ -13,7 +13,7 @@ Conecta el repositorio **Yerandy-Espinosa/pueblabus**, rama **main**. `netlify.t
 
 La compilación descarga `https://api.ctan.es/v1/datos/UNIFICADO/gtfs.zip`, filtra las líneas del consorcio de Sevilla que mencionan **Isla Mayor** y genera `data/ctan.json`. Conserva calendarios, excepciones de festivos y horas después de medianoche. No fija un número de línea ni atribuye ALSA como operador sin comprobarlo en los datos.
 
-**La descarga oficial no se ha podido verificar en este entorno:** el proxy responde 403 para `api.ctan.es`. El importador está comprobado con GTFS sintéticos, no con una descarga oficial reciente. Netlify intentará la descarga desde su propia red al construir. Si falla, no se publica una compilación nueva ni se usan datos de ejemplo como si fueran oficiales. Consulta [la guía de Netlify](docs/NETLIFY.md) y [la investigación de fuentes](docs/SOURCES.md).
+**Estado de la fuente:** el proxy de este entorno bloquea `api.ctan.es`, pero el registro del primer despliegue confirma que Netlify sí descargó el GTFS. Ese despliegue falló por comillas no escapadas en un nombre de parada; el lector ya contempla ese formato y tiene una prueba de regresión. La importación se intenta durante el build sin impedir que la web se publique si CTAN falla: sin un GTFS válido, la API indica que los horarios no están disponibles. No se usan datos de ejemplo como si fueran oficiales. La importación completa del archivo actual deberá confirmarse en el siguiente despliegue. Consulta [la guía de Netlify](docs/NETLIFY.md) y [la investigación de fuentes](docs/SOURCES.md).
 
 ## Horarios y ubicación son datos diferentes
 

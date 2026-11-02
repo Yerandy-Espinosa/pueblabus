@@ -6,8 +6,8 @@
    - publicación: `dist`;
    - funciones: `netlify/functions`;
    - Node: 24.19.0.
-3. Despliega. La fase de importación debe indicar el número de variantes, paradas, viajes y la fecha final del calendario. Si CTAN falla, el build se detiene. Revisa el registro antes de modificar la fuente; no desactives TLS ni sustituyas datos reales por fixtures.
-4. Abre `/api/health` y `/api/transit` en el dominio asignado. Este último debe indicar `mode: "scheduled"`, una fuente de CTAN y `vehicles: []` mientras no se configure GPS.
+3. Despliega. La fase de importación debe indicar el número de variantes, paradas, viajes y la fecha final del calendario. Si CTAN falla o publica un archivo que no puede validarse, se registra el error y se compila la web. Sin un archivo válido, la API indica que los horarios no están disponibles; nunca se reemplazan por fixtures. La actualización manual `npm run data:sync` conserva su salida de error para facilitar el diagnóstico. No desactives TLS.
+4. Abre `/api/health` y `/api/transit` en el dominio asignado. Con una importación correcta, este último indica `mode: "scheduled"`, una fuente de CTAN y `vehicles: []` mientras no se configure GPS. Sin datos válidos, devuelve HTTP 503 con `status: "unavailable"`; no lo interpretes como una consulta de horarios correcta.
 5. Comprueba mapa, paradas y horarios en móvil y ordenador. El mapa indicará «SIN GPS» mientras solo haya horarios.
 
 No necesitas ejecutar Express en Netlify. Las peticiones `/api/*` van a la función; la redirección de SPA va después, para no devolver HTML al solicitar JSON.

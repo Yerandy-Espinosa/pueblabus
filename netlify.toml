@@ -8,7 +8,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  included_files = ["data/ctan.json"]
+  included_files = ["data/**"]
 
 [[redirects]]
   from = "/api/*"

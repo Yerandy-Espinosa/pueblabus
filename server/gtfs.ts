@@ -18,7 +18,14 @@ export function importGtfs(bytes: Uint8Array, now = new Date()): Feed {
   const rows = (name: string, required = true): Row[] => {
     const key = Object.keys(zip).find(k => k === name || k.endsWith(`/${name}`));
     if (!key) { if (required) throw new Error(`Falta ${name} en el GTFS`); return []; }
-    return parse(strFromU8(zip[key]), { columns: true, bom: true, skip_empty_lines: true, max_record_size: 100_000, trim: true });
+    // CTAN contains literal, unescaped quotes in some stop names. csv-parse's
+    // trim + relax_quotes combination still throws after a closing quote.
+    // Preserve literal quotes and trim decoded cells instead; keep column counts
+    // strict so malformed CSV cannot shift names into coordinate columns.
+    return parse(strFromU8(zip[key]), {
+      columns: true, bom: true, skip_empty_lines: true, max_record_size: 100_000,
+      relax_quotes: true, cast: (value: string) => value.trim(),
+    });
   };
   const agencies = new Map(rows('agency.txt').map(a => [a.agency_id, a]));
   const lines = rows('routes.txt').filter(r => {

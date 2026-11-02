@@ -46,6 +46,19 @@ describe('importación de horarios GTFS', () => {
     expect(journeysFor(data, route, '2026-11-02')[0].stopTimes[1].time).toBe('24:12:00');
     expect(displayTime('24:55:00')).toBe('00:55 (+1)');
   });
+  it('acepta nombres con comillas literales sin desplazar las coordenadas', () => {
+    const data = importGtfs(fixture({
+      'stops.txt': 'stop_id,stop_name,stop_lat,stop_lon\nA, Isla Mayor , 37.133 , -6.16 \nB,"Parada" Centro,37.28,-6.05\nC,"Sevilla, ""Plaza de Armas""",37.39,-6.00\n',
+    }), now);
+    expect(data.stops.map(s => s.name)).toEqual(['Isla Mayor', '"Parada" Centro', 'Sevilla, "Plaza de Armas"']);
+    expect(data.stops[1].position).toEqual([37.28, -6.05]);
+    expect(data.stops[2].position).toEqual([37.39, -6]);
+  });
+  it('sigue rechazando registros con columnas desplazadas en vez de omitir paradas', () => {
+    expect(() => importGtfs(fixture({
+      'stops.txt': 'stop_id,stop_name,stop_lat,stop_lon\nA,Isla Mayor,37.133,-6.16\nB,Parada, Centro,37.28,-6.05\nC,Sevilla,37.39,-6.00\n',
+    }), now)).toThrow();
+  });
   it('conserva la geometría publicada cuando está disponible', () => {
     const data = importGtfs(fixture({
       'trips.txt': 'route_id,service_id,trip_id,trip_headsign,direction_id,shape_id\nR1,WORK,T1,Sevilla,0,S1\n',
