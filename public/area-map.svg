@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1040" viewBox="0 0 900 1040">
+<defs>
+  <pattern id="fields" width="82" height="66" patternUnits="userSpaceOnUse" patternTransform="rotate(-12)"><rect width="82" height="66" fill="#e8eadc"/><rect x="3" y="3" width="47" height="60" fill="#e1e5d2"/><rect x="53" y="3" width="26" height="28" fill="#edf0e1"/><path d="M0 0h82v66H0zM50 0v66M50 33h32" fill="none" stroke="#f7f6ee" stroke-width="3"/></pattern>
+  <pattern id="blocks" width="31" height="25" patternUnits="userSpaceOnUse" patternTransform="rotate(12)"><rect width="31" height="25" fill="#e6e2d9"/><rect x="4" y="3" width="23" height="18" rx="2" fill="#d8d5cc"/><path d="M0 0h31v25H0z" fill="none" stroke="#fdfbf6" stroke-width="4"/></pattern>
+  <style>.town{font:600 17px system-ui,sans-serif;fill:#5c6861;paint-order:stroke;stroke:#f6f4ed;stroke-width:4;stroke-linejoin:round}.small{font:12px system-ui,sans-serif;fill:#858e82;letter-spacing:1.5px}.road{fill:none;stroke-linecap:round;stroke-linejoin:round}</style>
+</defs>
+<rect width="900" height="1040" fill="#eeeee5"/>
+<path d="M0 370L140 310 210 390 320 340 470 470 450 680 600 850 900 880V1040H0Z" fill="url(#fields)"/>
+<path d="M0 60L230 20 310 110 250 200 310 260 220 390 100 360 0 430Z" fill="#e1e8d6"/>
+<path d="M750 70L900 20V650L810 740 710 670 760 510 680 380Z" fill="#e5eadb"/>
+<path d="M150 760L245 715 320 810 250 920 135 970 60 850Z" fill="#d9e4cb" opacity=".65"/>
+<path d="M610 -30C565 55 625 95 620 150S639 230 643 290S628 345 596 375 577 430 555 475 535 535 540 578 568 617 548 653 484 682 475 728 455 807 428 840 390 888 365 941 350 1004 329 1060" fill="none" stroke="#c0dcd5" stroke-width="18"/>
+<path d="M612 -30C567 55 627 95 622 150S641 230 645 290S630 345 598 375 579 430 557 475 537 535 542 578 570 617 550 653 486 682 477 728 457 807 430 840 392 888 367 941 352 1004 331 1060" fill="none" stroke="#cfe5de" stroke-width="10"/>
+<path d="M625 150L680 235 692 360 659 490 652 630 570 850" class="road" stroke="#f9faf5" stroke-width="5"/>
+<path d="M480 20L530 80 570 140 578 230 546 318 553 412 517 472 490 534 485 598 448 648 394 706 352 780 265 824 220 950 225 1050" class="road" stroke="#d9d4c5" stroke-width="15"/>
+<path d="M480 20L530 80 570 140 578 230 546 318 553 412 517 472 490 534 485 598 448 648 394 706 352 780 265 824 220 950 225 1050" class="road" stroke="#fffdf7" stroke-width="10"/>
+<path d="M-20 190L130 160 280 177 410 148 570 140 645 142 760 160 910 146M60 -10L190 190 310 245 460 260 578 230 700 245 910 295" class="road" stroke="#e6d6b7" stroke-width="12"/>
+<path d="M-20 190L130 160 280 177 410 148 570 140 645 142 760 160 910 146M60 -10L190 190 310 245 460 260 578 230 700 245 910 295" class="road" stroke="#fffbef" stroke-width="7"/>
+<path d="M220 950L225 840 240 760 260 720 320 665 375 620 420 574 448 540 470 520 490 490 517 472 525 435 546 400 555 350 570 300 578 230 590 200 608 170 624 145" class="road" stroke="#ded8c7" stroke-width="11"/>
+<path d="M220 950L225 840 240 760 260 720 320 665 375 620 420 574 448 540 470 520 490 490 517 472 525 435 546 400 555 350 570 300 578 230 590 200 608 170 624 145" class="road" stroke="#fffdf6" stroke-width="7"/>
+<path d="M614 38L696 25 775 53 796 110 782 185 730 220 670 206 639 167 620 114Z" fill="url(#blocks)"/>
+<path d="M530 163L575 154 608 196 596 249 555 253 518 218Z M512 276L549 270 577 307 568 349 529 354 508 321Z M512 424L543 429 550 464 538 498 500 494 485 468Z M491 500L525 505 530 538 506 558 476 537Z M214 902L246 901 264 929 248 960 216 967 198 938Z" fill="url(#blocks)"/>
+<path d="M235 1000L160 920 98 850M240 760L100 700 0 704M320 665L300 560 195 490 0 500M546 400L410 390 355 320 310 245M696 25L695 210M655 65L780 95M645 150L780 130" class="road" stroke="#fdfbf5" stroke-width="5"/>
+<text class="town" x="682" y="130" font-size="27">SEVILLA</text>
+<text class="town" x="390" y="220">San Juan de</text><text class="town" x="390" y="240">Aznalfarache</text>
+<text class="town" x="590" y="320">Gelves</text>
+<text class="town" x="560" y="467">Coria del Río</text>
+<text class="town" x="542" y="542">La Puebla del Río</text>
+<text class="town" x="255" y="950">Isla Mayor</text>
+<text class="town" x="262" y="812" font-size="12">Alfonso XIII</text>
+<text class="small" x="95" y="380">ALJARAFE</text>
+<text class="small" x="70" y="630">MARISMAS DEL</text><text class="small" x="70" y="652">GUADALQUIVIR</text>
+<text class="small" x="675" y="570" transform="rotate(-70 675 570)">GUADALQUIVIR</text>
+<g fill="#fffdf7" stroke="#ddd8c7"><rect x="446" y="592" width="43" height="20" rx="4"/><rect x="274" y="170" width="35" height="20" rx="4"/></g>
+<text x="452" y="606" font-family="system-ui" font-size="10" fill="#9b967d">A-8050</text><text x="280" y="184" font-family="system-ui" font-size="10" fill="#9b967d">A-49</text>
+</svg>
